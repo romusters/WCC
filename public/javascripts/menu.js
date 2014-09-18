@@ -3,5 +3,4 @@
  */
 $(document).ready(function() {
     $(".nav").find("li:first").addClass("active");
-    $("")
 });
