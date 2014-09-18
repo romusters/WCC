@@ -1,0 +1,9 @@
+@(menuitems: List[controllers.Menuitem])
+
+@main("Light / Temperature Level Approximation") {
+
+    @for(menuitem <- menuitems) {
+        <li><a href=@menuitem.loc>@menuitem.name</a></li>
+    }
+
+}
