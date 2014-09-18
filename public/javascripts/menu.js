@@ -6,8 +6,10 @@ $(document).ready(function() {
 
     $(".menu").find("li").on("click", function(){
         $(".menu .active").removeClass("active");
-        $(this).addClass("active");
-        $(".menu").find("li").eq($(this).index()).addClass("active");
+        /*$(this).addClass("active");*/
+        /*$(".menu").find("li").eq($(this).index()).addClass("active");*/
+        var n = $(this).index()+1;
+        $(".menu").find("li:nth-child(" + n + ")").addClass("active");
     });
 
     $(".nav-tabs").find("li").on("click", function(){
