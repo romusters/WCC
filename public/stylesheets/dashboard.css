@@ -84,6 +84,9 @@ body {
     margin-top: 0;
 }
 
+a:focus{
+    outline: 0;
+}
 
 /*
  * Placeholder dashboard ideas
