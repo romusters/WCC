@@ -1,15 +1,17 @@
-var myApp = angular.module('myApp', []);
+(function(ng) {
+    var app = ng.module("myApp", []);
 
-myApp.controller('dataController', function($scope) {
-    $scope.current = {
-        loc: "North",
-        type: "Temperature",
-    };
-    $scope.tab = function(name){
-        $scope.current.type = name;
-    };
-    /* update location */
-    $scope.loc = function(name){
-        $scope.current.loc = name;
-    };
-});
+    app.controller("dataController", function($scope) {
+        $scope.current = {
+            loc: "North",
+            type: "Temperature",
+            data: ""
+        };
+        $scope.source = new EventSource("/json/" + $scope.current.loc.toLowerCase() + "/" + $scope.current.type.toLowerCase());
+        $scope.source.onmessage = function (event) {
+            $scope.$apply(function () {
+                $scope.current.data(Json.parse(event.data));
+            });
+        };
+    });
+})(angular);
