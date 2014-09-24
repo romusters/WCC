@@ -1,8 +1,8 @@
 /**
  * Created by tom on 17-9-14.
  */
-$( document ).ready()
-{
+$(document).ready(function() {
+
     var ctx = $("#myChart").get(0).getContext("2d");
 
     var options = {
@@ -50,12 +50,14 @@ $( document ).ready()
 
     };
 
+    var ng_scope = angular.element($("#content")).scope();
+
     $.ajax({
-        url: "/json/north/temperature",
+        url: "/json/" + ng_scope.current.loc.toLowerCase() + "/" + ng_scope.current.type.toLowerCase(),
         dataType: "json",
     }).done(function(data) {
         var myLineChart = new Chart(ctx).Line(data, options);
     }).fail(function(jqXHR, textStatus, errorThrown){
         alert("Could not retrieve data (" + errorThrown + ")");
     });
-};
+});

@@ -12,11 +12,10 @@ $(document).ready(function() {
         $(".menu").find("li:nth-child(" + n + ")").addClass("active");
     });
 
-    /* change text on click of nav-tab */
+    /* change active tab on click of nav-tab item */
     $(".nav-tabs").find("li").on("click", function(){
         $(".nav-tabs .active").removeClass("active");
         $(this).addClass("active");
-        $(".namechange").text($(this).find("a").text());
     });
 
 });

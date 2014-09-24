@@ -9,4 +9,4 @@ GET     /                           controllers.Application.index
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
 
 # Map json requests to the json controller
-GET     /json/:loc/:data            controllers.JsonController.json(loc: String,data: String)
+GET     /json/:loc/:type            controllers.JsonController.json(loc: String,type: String)
