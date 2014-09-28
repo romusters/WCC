@@ -10,5 +10,6 @@ libraryDependencies ++= Seq(
   jdbc,
   anorm,
   cache,
-  ws
+  ws,
+  "com.datastax.cassandra" % "cassandra-driver-core" % "2.1.1"
 )
