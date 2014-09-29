@@ -17,6 +17,7 @@ object JsonController extends Controller {
     Promise.timeout(Some(json), 10 seconds)
   }
 
+
   def getJsonObject():JsValue = {
       val myJson: JsValue = Json.obj(
         "labels" -> labels,
@@ -47,6 +48,6 @@ object JsonController extends Controller {
   }
 
   def json(loc: String,d_type: String) = Action {
-    Ok(Enumerator(stream &> EventSource())).as("data/event-stream")
+    Ok(getJsonObject());
   }
 }
