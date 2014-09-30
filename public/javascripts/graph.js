@@ -50,18 +50,16 @@ $(document).ready(function() {
 
     };
 
-    /*
+
     var ng_scope = angular.element($("#content")).scope();
 
     $.ajax({
         url: "/json/" + ng_scope.current.loc.toLowerCase() + "/" + ng_scope.current.type.toLowerCase(),
         dataType: "json",
     }).done(function(data) {
-
+        var myLineChart = new Chart(ctx).Line(data, options);
     }).fail(function(jqXHR, textStatus, errorThrown){
         alert("Could not retrieve data (" + errorThrown + ")");
     });
-    */
 
-    var myLineChart = new Chart(ctx).Line(data, options);
 });
