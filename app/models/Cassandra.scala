@@ -3,6 +3,7 @@ package models
 import java.util.Date
 
 import com.datastax.driver.core.{ResultSet, Cluster, Host, Metadata}
+import org.joda.time.DateTime
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 
@@ -23,14 +24,29 @@ object CassandraManager {
   }
   val session = cluster.connect()
 
+  
+  def add() = {
+    val loc = "east"
+    var time = DateTime.now
+    val temperature = 20.0
+    val li = 2
+    var x = 0
+    for(x <- 1 to 100){
+      time = time.plusSeconds(10)
+      session.execute("insert into wcc.sensordata(loc, time,temperature,li) values('east', '" + time + "',"  + temperature + "," + li + ") using ttl 10;");
+    }
+
+  }
   def get(loc: String, d_type: String): (List[Float], List[Date]) = {
-    val results = session.execute("SELECT * FROM wcc.sensordata WHERE loc = '" + loc + "' ORDER BY time ASC LIMIT 100;")
+    add()
+    val results = session.execute("SELECT * FROM wcc.sensordata WHERE loc = 'west' ORDER BY time ASC LIMIT 100;")
     val result = new ListBuffer[Float]
     val label = new ListBuffer[Date]
     for (row <- results) {
       result += row.getFloat(d_type)
       label += row.getDate("time")
     }
+
     return (result.toList, label.toList)
   }
 
