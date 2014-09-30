@@ -1,6 +1,10 @@
 package models
 
+import java.util.Date
+
 import com.datastax.driver.core.{ResultSet, Cluster, Host, Metadata}
+import scala.collection.JavaConverters._
+import scala.collection.mutable.ListBuffer
 
 /**
  * Created by laptop on 28-9-14.
@@ -19,19 +23,19 @@ object CassandraManager {
   }
   val session = cluster.connect()
 
-  def get(loc: String, d_type: String): List[Float] = {
-    val results = session.execute("SELECT * FROM wcc.sensordata WHERE loc = '" + loc + "';")
-    val result = List()
+  def get(loc: String, d_type: String): (List[Float], List[Date]) = {
+    val results = session.execute("SELECT * FROM wcc.sensordata WHERE loc = '" + loc + "' ORDER BY time ASC LIMIT 100;")
+    val result = new ListBuffer[Float]
+    val label = new ListBuffer[Date]
     for (row <- results) {
-      result :+ row.getFloat(d_type)
-      println(row.getFloat(d_type))
+      result += row.getFloat(d_type)
+      label += row.getDate("time")
     }
-    println(result.mkString("[",",","]"))
-    return result
+    return (result.toList, label.toList)
   }
 
   def get_predicted(loc: String, d_type: String): List[Float] = {
-    return List(6)
+    return List(6, 7, 8)
   }
 
   def close {

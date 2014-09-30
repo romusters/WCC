@@ -13,8 +13,7 @@ object JsonController extends Controller {
 
   def getJsonObject(loc: String, d_type: String): JsValue = {
 
-    val labels = List("3:00")
-    val data_a = CassandraManager.get(loc, d_type)
+    val (data_a, labels) = CassandraManager.get(loc, d_type)
     val data_b = CassandraManager.get_predicted(loc, d_type)
 
     val myJson: JsValue = Json.obj(
