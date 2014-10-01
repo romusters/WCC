@@ -88,6 +88,10 @@ a:focus{
     outline: 0;
 }
 
+#error{
+    display: none;
+    margin-top: 10px;
+}
 
 /*
  * Placeholder dashboard ideas

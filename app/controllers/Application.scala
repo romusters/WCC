@@ -4,9 +4,6 @@ import play.api._
 import play.api.mvc._
 
 
-
-
-
 class Menuitem(txt: String, location: String){
   var name: String = txt
   var loc: String = location
@@ -17,7 +14,6 @@ object Application extends Controller {
   def index = Action {
     Ok(views.html.index(Menuitem.list))
   }
-
 
 }
 

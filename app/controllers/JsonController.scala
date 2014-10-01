@@ -1,12 +1,7 @@
 package controllers
 
 import play.api.libs.json._
-import play.api.libs.EventSource
 import play.api.mvc.{Action, Controller}
-import play.api.libs.iteratee.{Concurrent, Enumerator}
-import scala.concurrent.ExecutionContext.Implicits.global
-import play.api.libs.concurrent.Promise
-import scala.concurrent.duration._
 import models.CassandraManager
 
 object JsonController extends Controller {
@@ -18,28 +13,8 @@ object JsonController extends Controller {
 
     val myJson: JsValue = Json.obj(
       "labels" -> labels,
-      "datasets" -> Json.arr(
-        Json.obj(
-          "label" -> "My First dataset",
-          "fillColor" -> "rgba(220,220,220,0.2)",
-          "strokeColor" -> "rgba(220,220,220,1)",
-          "pointColor" -> "rgba(220,220,220,1)",
-          "pointStrokeColor" -> "#fff",
-          "pointHighlightFill" -> "#fff",
-          "pointHighlightStroke" -> "rgba(220,220,220,1)",
-          "data" -> Json.toJson(data_a)
-        ),
-        Json.obj(
-          "label" -> "My Second dataset",
-          "fillColor" -> "rgba(151,187,205,0.2)",
-          "strokeColor" -> "rgba(151,187,205,1)",
-          "pointColor" -> "rgba(151,187,205,1)",
-          "pointStrokeColor" -> "#fff",
-          "pointHighlightFill" -> "#fff",
-          "pointHighlightStroke" -> "rgba(151,187,205,1)",
-          "data" -> Json.toJson(data_b)
-        )
-      )
+      "sensor_data" -> data_a,
+      "predicted_data" -> data_b
     )
     return myJson
   }

@@ -12,6 +12,11 @@ $(document).ready(function() {
         $(".menu").find("li:nth-child(" + n + ")").addClass("active");
     });
 
+    /* for some reason not preventing default behaviour throws an error */
+    $(".menu").find("li").click(function(e){
+        e.preventDefault();
+    });
+
     /* change active tab on click of nav-tab item */
     $(".nav-tabs").find("li").on("click", function(){
         $(".nav-tabs .active").removeClass("active");

@@ -2,14 +2,32 @@ package models
 
 import java.util.Date
 
-import com.datastax.driver.core.{ResultSet, Cluster, Host, Metadata}
-import org.joda.time.DateTime
-import scala.collection.JavaConverters._
+import com.datastax.driver.core.{Cluster, Metadata}
+import akka.actor.{ActorSystem, Actor, Props}
+import scala.concurrent.duration._
 import scala.collection.mutable.ListBuffer
+
 
 /**
  * Created by laptop on 28-9-14.
  */
+
+class MyActor(cluster: Cluster) extends Actor {
+  val session = cluster.connect()
+
+  val loc = "north"
+  val temperature = 20.0
+  val li = 2
+
+  def receive = {
+    case "addData" =>
+      session.execute("CREATE TABLE IF NOT EXISTS wcc.sensordata (loc text, time timestamp, temperature float, li float, primary key(loc, time));")
+      session.execute("INSERT INTO wcc.sensordata(loc, time, temperature, li) VALUES ('" + loc + "', dateof(now())," + temperature + "," + li + ");")
+    case _ =>
+      println("unknown thing received")
+  }
+
+}
 
 object CassandraManager {
   val cluster = Cluster.builder.addContactPoint("127.0.0.1").build
@@ -24,29 +42,21 @@ object CassandraManager {
   }
   val session = cluster.connect()
 
-  
-  def add() = {
-    val loc = "east"
-    var time = DateTime.now
-    val temperature = 20.0
-    val li = 2
-    var x = 0
-    for(x <- 1 to 100){
-      time = time.plusSeconds(10)
-      session.execute("insert into wcc.sensordata(loc, time,temperature,li) values('east', '" + time + "',"  + temperature + "," + li + ") using ttl 10;");
-    }
+  val system = ActorSystem("TestSystem")
+  val myActor = system.actorOf(Props(new MyActor(cluster)), name = "myactor")
 
-  }
+  import system.dispatcher
+
+  val cancellable = system.scheduler.schedule(0 milliseconds, 1000 milliseconds, myActor, "addData")
+
   def get(loc: String, d_type: String): (List[Float], List[Date]) = {
-    add()
-    val results = session.execute("SELECT * FROM wcc.sensordata WHERE loc = 'west' ORDER BY time ASC LIMIT 100;")
+    val results = session.execute("SELECT * FROM wcc.sensordata WHERE loc = 'north' ORDER BY time DESC LIMIT 10;")
     val result = new ListBuffer[Float]
     val label = new ListBuffer[Date]
     for (row <- results) {
       result += row.getFloat(d_type)
       label += row.getDate("time")
     }
-
     return (result.toList, label.toList)
   }
 

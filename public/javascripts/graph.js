@@ -50,16 +50,50 @@ $(document).ready(function() {
 
     };
 
+    var settings = {
+        "labels": [ "" ],
+        "datasets": [
+            {
+                "label": "My First dataset",
+                "fillColor": "rgba(220,220,220,0.2)",
+                "strokeColor": "rgba(220,220,220,1)",
+                "pointColor": "rgba(220,220,220,1)",
+                "pointStrokeColor": "#fff",
+                "pointHighlightFill": "#fff",
+                "pointHighlightStroke": "rgba(220,220,220,1)",
+                "data": []
+            },
+            {
+                "label": "My Second dataset",
+                "fillColor": "rgba(151,187,205,0.2)",
+                "strokeColor": "rgba(151,187,205,1)",
+                "pointColor": "rgba(151,187,205,1)",
+                "pointStrokeColor": "#fff",
+                "pointHighlightFill": "#fff",
+                "pointHighlightStroke": "rgba(151,187,205,1)",
+                "data": []
+            }
+        ]
+    };
+
+    var myLineChart = new Chart(ctx).Line(settings, options);
+
 
     var ng_scope = angular.element($("#content")).scope();
 
-    $.ajax({
-        url: "/json/" + ng_scope.current.loc.toLowerCase() + "/" + ng_scope.current.type.toLowerCase(),
-        dataType: "json",
-    }).done(function(data) {
-        var myLineChart = new Chart(ctx).Line(data, options);
-    }).fail(function(jqXHR, textStatus, errorThrown){
-        alert("Could not retrieve data (" + errorThrown + ")");
-    });
+    function ajaxCall() {
+        $.ajax({
+            url: "/json/" + ng_scope.current.loc.toLowerCase() + "/" + ng_scope.current.type.toLowerCase(),
+            dataType: "json"
+        }).done(function (result) {
+            $("#error").hide("slow");
+            myLineChart.addData( [ result.sensor_data[0], result.predicted_data[0] ], result.labels[0]);
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            $("#error").show("slow");
+        });
+    }
+
+    ajaxCall();
+    setInterval(ajaxCall, 5000);
 
 });
