@@ -18,7 +18,7 @@ class MyActor(cluster: Cluster) extends Actor {
   val loc = "north"
   val temperature = 20.0
   val li = 2
-
+blbllbbl
   def receive = {
     case "addData" =>
       session.execute("CREATE TABLE IF NOT EXISTS wcc.sensordata (loc text, time timestamp, temperature float, li float, primary key(loc, time));")
