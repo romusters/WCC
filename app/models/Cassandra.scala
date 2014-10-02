@@ -5,7 +5,7 @@ import java.util.Date
 import com.datastax.driver.core.{Cluster, Metadata}
 import akka.actor.{ActorSystem, Actor, Props}
 import scala.concurrent.duration._
-import scala.collection.mutable.ListBuffer
+import java.text._
 
 
 /**
@@ -49,19 +49,20 @@ object CassandraManager {
 
   val cancellable = system.scheduler.schedule(0 milliseconds, 1000 milliseconds, myActor, "addData")
 
-  def get(loc: String, d_type: String): (Float, Date) = {
-    val results = session.execute("SELECT * FROM wcc.sensordata WHERE loc = 'north' ORDER BY time DESC LIMIT 1;")
+  def get(loc: String, d_type: String): (Float, String) = {
+    val results = session.execute("SELECT * FROM wcc.sensordata WHERE loc = '" + loc + "' ORDER BY time DESC LIMIT 1;")
     var result: Float = 0
-    var label: Date = new Date()
+    var date: Date = new Date()
+    val format = new SimpleDateFormat("HH:mm:ss")
     for (row <- results) {
       result = row.getFloat(d_type)
-      label = row.getDate("time")
+      date = row.getDate("time")
     }
-    return (result, label)
+    return (result, format.format(date))
   }
 
-  def get_predicted(loc: String, d_type: String): List[Float] = {
-    return List(6, 7, 8)
+  def get_predicted(loc: String, d_type: String): Float = {
+    return 6
   }
 
   def close {
