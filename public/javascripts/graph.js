@@ -87,7 +87,7 @@ $(document).ready(function() {
             dataType: "json"
         }).done(function (result) {
             $("#error").hide("slow");
-            myLineChart.addData( [ result.sensor_data[0], result.predicted_data[0] ], result.labels[0]);
+            myLineChart.addData( [ result.sensor_data, result.predicted_data ], result.labels[0]);
         }).fail(function (jqXHR, textStatus, errorThrown) {
             $("#error").show("slow");
         });

@@ -49,15 +49,15 @@ object CassandraManager {
 
   val cancellable = system.scheduler.schedule(0 milliseconds, 1000 milliseconds, myActor, "addData")
 
-  def get(loc: String, d_type: String): (List[Float], List[Date]) = {
-    val results = session.execute("SELECT * FROM wcc.sensordata WHERE loc = 'north' ORDER BY time DESC LIMIT 10;")
-    val result = new ListBuffer[Float]
-    val label = new ListBuffer[Date]
+  def get(loc: String, d_type: String): (Float, Date) = {
+    val results = session.execute("SELECT * FROM wcc.sensordata WHERE loc = 'north' ORDER BY time DESC LIMIT 1;")
+    var result: Float = 0
+    var label: Date = new Date()
     for (row <- results) {
-      result += row.getFloat(d_type)
-      label += row.getDate("time")
+      result = row.getFloat(d_type)
+      label = row.getDate("time")
     }
-    return (result.toList, label.toList)
+    return (result, label)
   }
 
   def get_predicted(loc: String, d_type: String): List[Float] = {
