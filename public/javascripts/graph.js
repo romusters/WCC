@@ -81,11 +81,24 @@ $(document).ready(function() {
 
     var ng_scope = angular.element($("#content")).scope();
 
+    if(ng_scope.current.click == 1){
+        ajaxCall();
+    }
+
     function ajaxCall() {
         $.ajax({
             url: "/json/" + ng_scope.current.loc.toLowerCase() + "/" + ng_scope.current.type.toLowerCase(),
             dataType: "json"
         }).done(function (result) {
+            if(ng_scope.current.click == 1){
+                console.log("click", ng_scope.current.click)
+                myLineChart.destroy();
+                myLineChart = new Chart(ctx).Line(settings, options);
+                ng_scope.current.click = 0;
+                ng_scope.$apply();
+            }
+            console.log("test6", ng_scope.current.click)
+
             $("#error").hide("slow");
             myLineChart.addData( [ result.sensor_data, result.predicted_data ], result.labels);
             if(myLineChart.datasets[0].points.length > 20){
