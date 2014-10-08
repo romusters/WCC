@@ -4,6 +4,7 @@ import com.datastax.driver.core.{ResultSet, BoundStatement, Cluster, Metadata}
 import akka.actor.{ActorSystem, Actor, Props}
 import scala.concurrent.duration._
 import java.util.Date
+import java.util.Random
 import java.text._
 
 
@@ -12,16 +13,23 @@ import java.text._
  */
 
 class Data(location: String, temperature: Float, light: Float) {
+
+  def randNum(max: Int): Int = {
+    val rnd = new scala.util.Random
+    val range = -max to max
+    return range(rnd.nextInt(range length))
+  }
+
   val loc: String = location
-  val temp: Float = temperature
-  val li: Float = light
+  val temp: Float = temperature + randNum(3)
+  val li: Float = light + randNum(1)
 }
 
 class DataActor(cluster: Cluster) extends Actor {
   val session = cluster.connect()
   //val prepare_createTable = new BoundStatement(session.prepare("CREATE TABLE IF NOT EXISTS wcc.sensordata (loc text, time timestamp, temperature float, li float, primary key(loc, time));"))
   val prepare_addData = new BoundStatement(session.prepare("INSERT INTO wcc.sensordata(loc, time, temperature, li) VALUES (?, dateOf(now()), ?, ?);"))
-  val prepare_getData = new BoundStatement(session.prepare("SELECT * FROM wcc.sensordata WHERE loc = ? ORDER BY time DESC LIMIT 1;"))
+  //val prepare_getData = new BoundStatement(session.prepare("SELECT * FROM wcc.sensordata WHERE loc = ? ORDER BY time DESC LIMIT 1;"))
 
   def addData(data: Data) {
     prepare_addData.setString(0, data.loc)
@@ -32,7 +40,11 @@ class DataActor(cluster: Cluster) extends Actor {
   }
 
   def receive: Receive = {
-    case data: Data => addData(data)
+    case "addData" =>
+      addData(new Data("north", 18, 2))
+      addData(new Data("east", 19, 2))
+      addData(new Data("south", 21, 2))
+      addData(new Data("west", 20, 2))
   }
 
 }
@@ -56,8 +68,7 @@ object CassandraManager {
   import system.dispatcher
 
   /* create data object and add it to the database */
-  val data: Data = new Data("north", 20, 2)
-  val cancellable = system.scheduler.schedule(0 milliseconds, 1000 milliseconds, dataActor, data)
+  val cancellable = system.scheduler.schedule(0 milliseconds, 1000 milliseconds, dataActor, "addData")
 
   def get(loc: String, d_type: String): (Float, String) = {
     val results = session.execute("SELECT * FROM wcc.sensordata WHERE loc = '" + loc + "' ORDER BY time DESC LIMIT 1;")
