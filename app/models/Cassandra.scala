@@ -1,10 +1,9 @@
 package models
 
-import java.util.Date
-
-import com.datastax.driver.core.{Cluster, Metadata}
+import com.datastax.driver.core.{ResultSet, BoundStatement, Cluster, Metadata}
 import akka.actor.{ActorSystem, Actor, Props}
 import scala.concurrent.duration._
+import java.util.Date
 import java.text._
 
 
@@ -12,19 +11,28 @@ import java.text._
  * Created by laptop on 28-9-14.
  */
 
-class MyActor(cluster: Cluster) extends Actor {
-  val session = cluster.connect()
+class Data(location: String, temperature: Float, light: Float) {
+  val loc: String = location
+  val temp: Float = temperature
+  val li: Float = light
+}
 
-  val loc = "north"
-  val temperature = 20.0
-  val li = 2
-blbllbbl
-  def receive = {
-    case "addData" =>
-      session.execute("CREATE TABLE IF NOT EXISTS wcc.sensordata (loc text, time timestamp, temperature float, li float, primary key(loc, time));")
-      session.execute("INSERT INTO wcc.sensordata(loc, time, temperature, li) VALUES ('" + loc + "', dateof(now())," + temperature + "," + li + ");")
-    case _ =>
-      println("unknown thing received")
+class DataActor(cluster: Cluster) extends Actor {
+  val session = cluster.connect()
+  //val prepare_createTable = new BoundStatement(session.prepare("CREATE TABLE IF NOT EXISTS wcc.sensordata (loc text, time timestamp, temperature float, li float, primary key(loc, time));"))
+  val prepare_addData = new BoundStatement(session.prepare("INSERT INTO wcc.sensordata(loc, time, temperature, li) VALUES (?, dateOf(now()), ?, ?);"))
+  val prepare_getData = new BoundStatement(session.prepare("SELECT * FROM wcc.sensordata WHERE loc = ? ORDER BY time DESC LIMIT 1;"))
+
+  def addData(data: Data) {
+    prepare_addData.setString(0, data.loc)
+    prepare_addData.setFloat(1, data.temp)
+    prepare_addData.setFloat(2, data.li)
+    //session.execute(prepare_createTable)
+    session.executeAsync(prepare_addData)
+  }
+
+  def receive: Receive = {
+    case data: Data => addData(data)
   }
 
 }
@@ -42,20 +50,30 @@ object CassandraManager {
   }
   val session = cluster.connect()
 
-  val system = ActorSystem("TestSystem")
-  val myActor = system.actorOf(Props(new MyActor(cluster)), name = "myactor")
+  val system = ActorSystem("DataSystem")
+  val dataActor = system.actorOf(Props(new DataActor(cluster)), name = "dataactor")
 
   import system.dispatcher
 
-  val cancellable = system.scheduler.schedule(0 milliseconds, 1000 milliseconds, myActor, "addData")
+  /* create data object and add it to the database */
+  val data: Data = new Data("north", 20, 2)
+  val cancellable = system.scheduler.schedule(0 milliseconds, 1000 milliseconds, dataActor, data)
 
   def get(loc: String, d_type: String): (Float, String) = {
     val results = session.execute("SELECT * FROM wcc.sensordata WHERE loc = '" + loc + "' ORDER BY time DESC LIMIT 1;")
     var result: Float = 0
     var date: Date = new Date()
+    var q_type = ""
     val format = new SimpleDateFormat("HH:mm:ss")
+
+    if(d_type == "light intensity"){
+      q_type = "li"
+    } else {
+      q_type = d_type
+    }
+
     for (row <- results) {
-      result = row.getFloat(d_type)
+      result = row.getFloat(q_type)
       date = row.getDate("time")
     }
     return (result, format.format(date))
