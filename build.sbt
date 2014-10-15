@@ -11,5 +11,6 @@ libraryDependencies ++= Seq(
   anorm,
   cache,
   ws,
-  "com.datastax.cassandra" % "cassandra-driver-core" % "2.1.1"
+  "com.datastax.cassandra" % "cassandra-driver-core" % "2.1.1",
+  "org.apache.spark" % "spark-core_2.10" % "1.0.2"
 )

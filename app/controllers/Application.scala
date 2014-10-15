@@ -3,6 +3,10 @@ package controllers
 import play.api._
 import play.api.mvc._
 
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits._
+
+import models.SimpleUtility
 
 class Menuitem(txt: String, location: String){
   var name: String = txt
@@ -12,6 +16,7 @@ class Menuitem(txt: String, location: String){
 object Application extends Controller {
 
   def index = Action {
+    Future{SimpleUtility.SimpleApp}
     Ok(views.html.index(Menuitem.list))
   }
 
