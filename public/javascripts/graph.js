@@ -6,6 +6,7 @@ $(document).ready(function() {
     var ctx = $("#myChart").get(0).getContext("2d");
 
     var options = {
+        animation: false,
 
         scaleShowGridLines: true,
 
@@ -16,7 +17,7 @@ $(document).ready(function() {
         scaleGridLineWidth: 1,
 
         //Boolean - Whether the line is curved between points
-        bezierCurve: true,
+        bezierCurve: false,
 
         //Number - Tension of the bezier curve between points
         bezierCurveTension: 0.4,

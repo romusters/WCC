@@ -1,8 +1,8 @@
 package controllers
 
-import play.api._
 import play.api.mvc._
-
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkConf
 
 class Menuitem(txt: String, location: String){
   var name: String = txt
@@ -12,6 +12,8 @@ class Menuitem(txt: String, location: String){
 object Application extends Controller {
 
   def index = Action {
+    WeatherPoller.getTemperature()
+    val conf = new SparkConf(true).set("spark.cassandra.connection.host", "127.0.0.1")
     Ok(views.html.index(Menuitem.list))
   }
 
