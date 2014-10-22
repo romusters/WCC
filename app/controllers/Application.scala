@@ -16,7 +16,6 @@ class Menuitem(txt: String, location: String){
 object Application extends Controller {
 
   def index = Action {
-    Future{SimpleUtility.SimpleApp}
     Ok(views.html.index(Menuitem.list))
   }
 
