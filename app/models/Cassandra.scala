@@ -6,46 +6,41 @@ import scala.concurrent.duration._
 import java.util.{Calendar, Date, Random}
 import java.text._
 
-
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkConf
+import org.apache.spark.{SparkContext, SparkConf}
+import com.datastax.spark.connector._
 
 /**
  * Created by laptop on 28-9-14.
  */
 
-object SimpleUtility{
 
-  def SimpleApp {
-    val conf = new SparkConf()
-        .setMaster("local[4]")
-        .setAppName("play-scala")
-    val sc = new SparkContext(conf)
-
-    val count = sc.parallelize(1 to 10000).map{i =>
-      val x = Math.random()
-      val y = Math.random()
-      if (x*x + y*y < 1) 1 else 0
-    }.reduce(_ + _)
-    println("Pi is roughly " + 4.0 * count / 10000)
+object SparkHelper {
+  def getConnection(): SparkContext = {
+    val conf = new SparkConf(true)
+      .set("spark.cassandra.connection.host", "127.0.0.1")
+    val sc = new SparkContext("local[4]", "test", conf)
+    sc
   }
 }
 
-class Data(location: String, temperature: Float, light: Float) {
+class ComputeSome {
+  def compute() {
+    val connection = SparkHelper getConnection()
+    val rdd = connection.cassandraTable("wcc", "sensordata").select("loc", "temperature")
+    val flatMap = rdd.map(s => (s.getString("loc"), s.getFloat("temperature")))
+    val grouped = flatMap.groupBy(kv => kv._1)
+    val gpf = grouped.map { case (word, list) => word -> list.map(kv => kv._2)}.cache()
+    val rf = gpf.map { case (word, list) => (word, list reduce (_ + _), list.size)}
+    val avg = rf.map { case (a, b, c) => (a, b / c)}
+    avg.foreach(f => System.out.println(f))
+  }
+}
+
+class SensorData(location: String, temperature: Float, light: Float) {
 
   def randNum(max: Int): Float = {
     val rnd = new scala.util.Random
     val range = -max to max
-
-    /*
-    val today = Calendar.getInstance().getTime()
-    val minuteFormat = new SimpleDateFormat("mm")
-    val currentMinuteAsString = minuteFormat.format(today)
-    val currentMinute = Integer.parseInt(currentMinuteAsString)
-
-    return (temperature * Math.sin(currentMinute)).toFloat
-    */
-
     return range(rnd.nextInt(range length))
   }
 
@@ -57,25 +52,31 @@ class Data(location: String, temperature: Float, light: Float) {
 class DataActor(cluster: Cluster) extends Actor {
   val session = cluster.connect()
   //val prepare_createTable = new BoundStatement(session.prepare("CREATE TABLE IF NOT EXISTS wcc.sensordata (loc text, time timestamp, temperature float, li float, primary key(loc, time));"))
-  val prepare_addData = new BoundStatement(session.prepare("INSERT INTO wcc.sensordata(loc, time, temperature, li) VALUES (?, dateOf(now()), ?, ?);"))
+  val prepare_addSensorData = new BoundStatement(session.prepare("INSERT INTO wcc.sensordata(loc, time, temperature, li) VALUES (?, dateOf(now()), ?, ?);"))
+  val prepare_addWeatherData = new BoundStatement(session.prepare("INSERT INTO wcc.weatherdata(source, time, temperature) VALUES(?, ?, ?);"))
   //val prepare_getData = new BoundStatement(session.prepare("SELECT * FROM wcc.sensordata WHERE loc = ? ORDER BY time DESC LIMIT 1;"))
 
-  def addData(data: Data) {
-    prepare_addData.setString(0, data.loc)
-    prepare_addData.setFloat(1, data.temp)
-    prepare_addData.setFloat(2, data.li)
-    //session.execute(prepare_createTable)
-    session.executeAsync(prepare_addData)
+  def addSensorData(data: SensorData) {
+    prepare_addSensorData.setString(0, data.loc)
+    prepare_addSensorData.setFloat(1, data.temp)
+    prepare_addSensorData.setFloat(2, data.li)
+    session.executeAsync(prepare_addSensorData)
+  }
+
+  def addWeatherData(source: String, time: Date, temp: Float): Unit = {
+    prepare_addWeatherData.setString(0, source)
+    prepare_addWeatherData.setDate(1, time)
+    prepare_addWeatherData.setFloat(2, temp)
+    session.executeAsync(prepare_addWeatherData)
   }
 
   def receive: Receive = {
-    case "addData" =>
-      addData(new Data("north", 18, 2))
-      addData(new Data("east", 19, 2))
-      addData(new Data("south", 21, 2))
-      addData(new Data("west", 20, 2))
+    case "addSensorData" =>
+      addSensorData(new SensorData("north", 18, 2))
+      addSensorData(new SensorData("east", 19, 2))
+      addSensorData(new SensorData("south", 21, 2))
+      addSensorData(new SensorData("west", 20, 2))
   }
-
 }
 
 object CassandraManager {
@@ -96,8 +97,8 @@ object CassandraManager {
 
   import system.dispatcher
 
-  /* create data object and add it to the database */
-  val cancellable = system.scheduler.schedule(0 milliseconds, 1000 milliseconds, dataActor, "addData")
+  /* schedule adding sensor data to database */
+  val cancellable = system.scheduler.schedule(0 milliseconds, 1000 milliseconds, dataActor, "addSensorData")
 
   def get(loc: String, d_type: String): (Float, String) = {
     val results = session.execute("SELECT * FROM wcc.sensordata WHERE loc = '" + loc + "' ORDER BY time DESC LIMIT 1;")
@@ -120,20 +121,6 @@ object CassandraManager {
   }
 
   def get_predicted(loc: String, d_type: String): Float = {
-/*
-    val logFile = "logs/spark.log" // Should be some file on your system
-    val conf = new SparkConf(false) // skip loading external settings
-        .setMaster("local[4]") // run locally with enough threads
-        .setAppName("firstSparkApp")
-        .set("spark.logConf", "true")
-        .set("spark.driver.host", "localhost")
-    val sc = new SparkContext(conf)
-    val logData = sc.textFile(logFile, 2).cache()
-    val numSparks = logData.filter(line => line.contains("Spark")).count()
-    println("Lines with Spark: %s".format(numSparks))
-*/
-
-
     return 6
   }
 
