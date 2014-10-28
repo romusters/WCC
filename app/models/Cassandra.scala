@@ -6,35 +6,9 @@ import scala.concurrent.duration._
 import java.util.{Calendar, Date, Random}
 import java.text._
 
-import org.apache.spark.{SparkContext, SparkConf}
-import com.datastax.spark.connector._
-
 /**
  * Created by laptop on 28-9-14.
  */
-
-
-object SparkHelper {
-  def getConnection(): SparkContext = {
-    val conf = new SparkConf(true)
-      .set("spark.cassandra.connection.host", "127.0.0.1")
-    val sc = new SparkContext("local[4]", "test", conf)
-    sc
-  }
-}
-
-class ComputeSome {
-  def compute() {
-    val connection = SparkHelper getConnection()
-    val rdd = connection.cassandraTable("wcc", "sensordata").select("loc", "temperature")
-    val flatMap = rdd.map(s => (s.getString("loc"), s.getFloat("temperature")))
-    val grouped = flatMap.groupBy(kv => kv._1)
-    val gpf = grouped.map { case (word, list) => word -> list.map(kv => kv._2)}.cache()
-    val rf = gpf.map { case (word, list) => (word, list reduce (_ + _), list.size)}
-    val avg = rf.map { case (a, b, c) => (a, b / c)}
-    avg.foreach(f => System.out.println(f))
-  }
-}
 
 class SensorData(location: String, temperature: Float, light: Float) {
 
