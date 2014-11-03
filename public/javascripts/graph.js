@@ -7,55 +7,26 @@ $(document).ready(function() {
 
     var options = {
         animation: false,
-
         scaleShowGridLines: true,
-
-        //String - Colour of the grid lines
-        scaleGridLineColor: "rgba(0,0,0,.05)",
-
-        //Number - Width of the grid lines
-        scaleGridLineWidth: 1,
-
-        //Boolean - Whether the line is curved between points
-        bezierCurve: false,
-
-        //Number - Tension of the bezier curve between points
-        bezierCurveTension: 0.4,
-
-        //Boolean - Whether to show a dot for each point
-        pointDot: true,
-
-        //Number - Radius of each point dot in pixels
-        pointDotRadius: 4,
-
-        //Number - Pixel width of point dot stroke
-        pointDotStrokeWidth: 1,
-
-        //Number - amount extra to add to the radius to cater for hit detection outside the drawn point
-        pointHitDetectionRadius: 20,
-
-        //Boolean - Whether to show a stroke for datasets
-        datasetStroke: true,
-
-        //Number - Pixel width of dataset stroke
-        datasetStrokeWidth: 2,
-
-        //Boolean - Whether to fill the dataset with a colour
-        datasetFill: true,
-
-        //Boolean - Automatically scale to parent size
-        responsive: true,
-
-        //String - A legend template
-        legendTemplate: "<ul class=\"<%=name.toLowerCase()%>-legend\"><% for (var i=0; i<datasets.length; i++){%><li><span style=\"background-color:<%=datasets[i].lineColor%>\"></span><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>"
-
+        scaleGridLineColor: "rgba(0,0,0,.05)", //String - Colour of the grid lines
+        scaleGridLineWidth: 1, //Number - Width of the grid lines
+        bezierCurve: false, //Boolean - Whether the line is curved between points
+        pointDot: true, //Boolean - Whether to show a dot for each point
+        pointDotRadius: 4, //Number - Radius of each point dot in pixels
+        pointDotStrokeWidth: 1, //Number - Pixel width of point dot stroke
+        pointHitDetectionRadius: 20, //Number - amount extra to add to the radius to cater for hit detection outside the drawn point
+        datasetStroke: true, //Boolean - Whether to show a stroke for datasets
+        datasetStrokeWidth: 2, //Number - Pixel width of dataset stroke
+        datasetFill: true, //Boolean - Whether to fill the dataset with a colour
+        responsive: true, //Boolean - Automatically scale to parent size
+        legendTemplate: "<ul class=\"<%=name.toLowerCase()%>-legend\"><% for (var i=0; i<datasets.length; i++){%><li><span style=\"background-color:<%=datasets[i].lineColor%>\"></span><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>" //String - A legend template
     };
 
     var settings = {
         "labels": [],
         "datasets": [
             {
-                "label": "My First dataset",
+                "label": "Sensor data",
                 "fillColor": "rgba(220,220,220,0.2)",
                 "strokeColor": "rgba(220,220,220,1)",
                 "pointColor": "rgba(220,220,220,1)",
@@ -65,7 +36,7 @@ $(document).ready(function() {
                 "data": []
             },
             {
-                "label": "My Second dataset",
+                "label": "Predicted data",
                 "fillColor": "rgba(151,187,205,0.2)",
                 "strokeColor": "rgba(151,187,205,1)",
                 "pointColor": "rgba(151,187,205,1)",
@@ -77,40 +48,12 @@ $(document).ready(function() {
         ]
     };
 
-    var myLineChart = new Chart(ctx).Line(settings, options);
-
-
+    /* create chart in angular scope and initialize it */
     var ng_scope = angular.element($("#content")).scope();
-
-    if(ng_scope.current.click == 1){
-        ajaxCall();
-    }
-
-    function ajaxCall() {
-        $.ajax({
-            url: "/json/" + ng_scope.current.loc.toLowerCase() + "/" + ng_scope.current.type.toLowerCase(),
-            dataType: "json"
-        }).done(function (result) {
-            if(ng_scope.current.click == 1){
-                console.log("click", ng_scope.current.click)
-                myLineChart.destroy();
-                myLineChart = new Chart(ctx).Line(settings, options);
-                ng_scope.current.click = 0;
-                ng_scope.$apply();
-            }
-            console.log("test6", ng_scope.current.click)
-
-            $("#error").hide("slow");
-            myLineChart.addData( [ result.sensor_data, result.predicted_data ], result.labels);
-            if(myLineChart.datasets[0].points.length > 20){
-                myLineChart.removeData();
-            }
-        }).fail(function (jqXHR, textStatus, errorThrown) {
-            $("#error").show("slow");
-        });
-    }
-
-    ajaxCall();
-    setInterval(ajaxCall, 5000);
+    ng_scope.ctx = ctx;
+    ng_scope.options = options;
+    ng_scope.settings = settings;
+    ng_scope.myLineChart = new Chart(ctx).Line(settings, options);
+    ng_scope.initChart();
 
 });

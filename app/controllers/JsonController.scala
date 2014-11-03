@@ -6,10 +6,10 @@ import models.CassandraManager
 
 object JsonController extends Controller {
 
-  def getJsonObject(loc: String, d_type: String): JsValue = {
+  def getJsonObject(loc: String, d_type: String, num: Int): JsValue = {
 
-    val (data_a, labels) = CassandraManager.get(loc, d_type)
-    val data_b = CassandraManager.get_predicted(loc, d_type)
+    val (data_a, labels) = CassandraManager.get(loc, d_type, num)
+    val data_b = CassandraManager.get_predicted(loc, d_type, num)
 
     val myJson: JsValue = Json.obj(
       "labels" -> labels,
@@ -19,7 +19,7 @@ object JsonController extends Controller {
     return myJson
   }
 
-  def json(loc: String,d_type: String) = Action {
-    Ok(getJsonObject(loc, d_type));
+  def json(loc: String,d_type: String, num: Int) = Action {
+    Ok(getJsonObject(loc, d_type, num));
   }
 }
